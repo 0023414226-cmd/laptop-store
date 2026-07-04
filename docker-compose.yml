@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: laptop-postgres-db
+    restart: always
+    environment:
+      POSTGRES_USER: laptop_admin
+      POSTGRES_PASSWORD: laptop_secure_password_2026
+      POSTGRES_DB: laptop_ecommerce_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U laptop_admin -d laptop_ecommerce_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laptop-next-app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://laptop_admin:laptop_secure_password_2026@db:5432/laptop_ecommerce_db?schema=public
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=laptop_secret_key_production_token_2026
+      - JWT_SECRET=laptop_jwt_token_secret_key_production_2026
+      - GOOGLE_CLIENT_ID=placeholder-client-id
+      - GOOGLE_CLIENT_SECRET=placeholder-client-secret
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
